@@ -8,6 +8,24 @@
 #include "Dot.h"
 int main()
 {
+	sf::Clock clock;
+	sf::Font font;
+	if(!font.loadFromFile("DejaVuSans.ttf")){
+		std::cout << "Failed to load font" << std::endl;
+		return 1;
+	}
+	sf::Text::Text	(	const String & 	string,
+	const myFont &  font,
+	unsigned int num	characterSize = 30);
+
+	sf::Text myText;
+	myText.setFont(font);
+	myText.setString("hello, world");
+	myText.setCharacterSize(24);
+	myText.setColor(sf::Color::Red);
+	myText.setPosition(650, 0);
+
+	float seconds;
 	bool dotConnected = false;
 	bool lastState = false;
 	int x, y, num, level;
@@ -24,6 +42,14 @@ int main()
 	sf::RectangleShape line;
 	line.setFillColor(sf::Color::Black);
 	line.setSize(sf::Vector2f(1, 2));
+	sf::RectangleShape block1;
+	block1.setFillColor(sf::Color::Black);
+	block1.setSize(sf::Vector2f(100, 50));
+	block1.setPosition(0, 300);
+	sf::RectangleShape block2;
+	block2.setFillColor(sf::Color::Black);
+	block2.setSize(sf::Vector2f(100, 50));
+	block2.setPosition(700, 300);
 
 	sf::RenderWindow window(sf::VideoMode(800, 600), "My window");
 	for(int c = 0 ; c < 2 ; c++){
@@ -70,47 +96,60 @@ int main()
 			}
 			if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && lastState == false){
 				sf::Vector2i tmp = sf::Mouse::getPosition(window);
-				sf::Vector2f diff = sf::Vector2f((float)tmp.x, (float)tmp.y) - c->shape.getPosition();
+				sf::Vector2f diff = sf::Vector2f((float)tmp.x, (float)tmp.y) - c->shape.getPosition() + sf::Vector2f(-10, -10);
 				if(hypot(diff.x, diff.y) < c->shape.getRadius() + c->shape.getOutlineThickness()){
 					curShape = c;
 				}
 
 			}
-			if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)&& lastState == true){
+			if (!sf::Mouse::isButtonPressed(sf::Mouse::Left) && lastState == true){
 				sf::Vector2i tmp = sf::Mouse::getPosition(window);
-				sf::Vector2f diff = sf::Vector2f((float)tmp.x, (float)tmp.y) - c->shape.getPosition();
-				if(hypot(diff.x, diff.y) < c->shape.getRadius() + c->shape.getOutlineThickness()&&curShape != c){
+				sf::Vector2f diff = sf::Vector2f((float)tmp.x, (float)tmp.y) - c->shape.getPosition() + sf::Vector2f(-10, -10);
+				if(hypot(diff.x, diff.y) < c->shape.getRadius() + c->shape.getOutlineThickness()&&curShape != c && curShape != nullptr){
 					dotConnected = true;
+					curShape = nullptr;
 				}
 
-				curShape = nullptr;
 			}
-        	c->shape.move(c->xVel, c->yVel);
+
+        	c->shape.move(c->xVel * seconds, c->yVel * seconds);
         	window.draw(c->shape);
 
         }
         if(!sf::Mouse::isButtonPressed(sf::Mouse::Left)&& lastState == true){
         	if(dotConnected){
-        		num+=level;
+        		num++;
+
         		level++;
+
         		for(auto& c:shapes){
-        			c->xVel++;
-        			c->yVel++;
+        			if(c->xVel < 0){
+        				c->xVel-=50;
+        				c->yVel-=50;
+
+        			}else{
+        				c->xVel+=50;
+        				c->yVel+=50;
+        			}
+        			std::cout << c->xVel <<", " << c->yVel << std::endl;
         		}
 
         	}else{
         		num--;
-        		window.close();
         	}
+
         	std::cout << num << std::endl;
         }
-        if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && lastState == false){
-			lastState = true;
-		}else if(!sf::Mouse::isButtonPressed(sf::Mouse::Left)){
-			lastState =  false;
-			curShape = nullptr;
-		}
 
+        if(level > 2){
+                		window.draw(block1);
+                		window.draw(block2);
+                	}
+        if(level > 10){
+        	block1.setSize(sf::Vector2f(150, 50));
+        	block2.setSize(sf::Vector2f(150, 50));
+        	block2.setPosition(650, 300);
+        }
         if (curShape != nullptr){
 			line.setPosition(curShape->shape.getPosition());
 			sf::Vector2i tmp = sf::Mouse::getPosition(window);
@@ -119,7 +158,20 @@ int main()
 			line.setRotation(atan2(diff.y, diff.x)*180.f/M_PI);
 			window.draw(line);
 		}
+
+		if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && lastState == false) {
+			lastState = true;
+
+		} else if(!sf::Mouse::isButtonPressed(sf::Mouse::Left)){
+			lastState =  false;
+			curShape = nullptr;
+		}
+
+		window.draw(myText);
+
         window.display();
+    	seconds = clock.getElapsedTime().asSeconds();
+    	clock.restart();
 	}
 
 
